@@ -1,0 +1,249 @@
+from tkinter import *
+import random
+import time
+#导入模块
+
+tk = Tk()
+#初始化窗口
+tk.title('五子棋游戏')
+tk.geometry("400x450")
+tk.config(bg='black')
+#设置窗口
+
+stateList = [[0 for i in range(8)] for j in range(8)]
+#初始化棋盘状态列表
+
+canvas = Canvas(tk, width=400, height=400, bg='#FFEFD5')
+canvas.pack(side=BOTTOM)
+#绘制棋盘
+
+stateLabel = Label(tk, text='轮到您...', font=('consoles', 20), fg='white', bg='black')
+stateLabel.place(x=150, y=10)
+#添加提示标签
+
+for i in range(8):
+    canvas.create_line(50, 50 + i * 42.7, 350, 50 + i * 42.7, fill='black')
+    canvas.create_line(50 + i * 42.7, 50, 50 + i * 42.7, 350, fill='black')
+#绘制棋盘网格
+
+def draw(x,y,fill):
+    '''
+    绘制棋子
+    :param x: 棋子的x坐标
+    :param y: 棋子的y坐标
+    :param fill: 棋子的颜色
+    :return: 无
+    '''
+    x1 = 50 + x * 42.7 + 1 - 20 / 2
+    y1 = 50 + y * 42.7 + 1 - 20 / 2
+    x2 = 50 + x * 42.7 + 1 + 20 / 2
+    y2 = 50 + y * 42.7 + 1 + 20 / 2
+    stateList[y][x] = fill
+    if fill == 1:
+        fill = 'black'
+    else:
+        fill = 'white'
+    canvas.create_oval(x1, y1, x2, y2, fill=fill)
+    stateLabel['text'] = '轮到您...'
+    canvas.bind("<Button-1>", on_canvas_click)
+    return 0
+
+def soon_win(player):
+    '''
+    电脑的预判函数
+    :param player: 当前玩家(computer or player)
+    :return: 是否进行拦截
+    '''
+    d={1:2,2:1}
+    for i in range(8):
+        for j in range(6):
+            if stateList[i][j] == player and stateList[i][j+1] == player and stateList[i][j+2] == player:
+                try:
+                    stateList[i][j+4]
+                except:
+                    return False
+                try:
+                    stateList[i][j-1]
+                except:
+                    return False
+                if stateList[i][j+4] == d[player]:
+                    draw(i,j,2)
+                elif stateList[i][j-1] == d[player]:
+                    draw(i,j,2)
+                return True
+    #检查行
+
+    for j in range(8):
+        for i in range(6):
+            if stateList[i][j] == player and stateList[i+1][j] == player and stateList[i+2][j] == player:
+                try:
+                    stateList[i+3][j]
+                except:
+                    return False
+                try:
+                    stateList[i-1][j]
+                except:
+                    return False
+                if stateList[i+3][j] == d[player]:
+                    draw(i,j,2)
+                elif stateList[i-1][j] == d[player]:
+                    draw(i,j,2)
+                return True
+    #检查列
+
+    for i in range(6):
+        for j in range(6):
+            if stateList[i][j] == player and stateList[i+1][j+1] == player and stateList[i+2][j+2] == player:
+                try:
+                    stateList[i+3][j+3]
+                except:
+                    return False
+                try:
+                    stateList[i-1][j-1]
+                except:
+                    return False
+                if stateList[i+3][j+3] == d[player]:
+                    draw(i,j,2)
+                elif stateList[i-1][j-1] == d[player]:
+                    draw(i,j,2)
+                return True
+    #检查正对角线
+
+    for i in range(7, 1, -1):
+        for j in range(6):
+            if stateList[i][j] == player and stateList[i-1][j+1] == player and stateList[i-2][j+2] == player:
+                try:
+                    stateList[i-3][j+3]
+                except:
+                    return False
+                try:
+                    stateList[i+1][j-1]
+                except:
+                    return False
+                if stateList[i-3][j+3] == d[player]:
+                    draw(i,j,2)
+                elif stateList[i+1][j-1] == d[player]:
+                    draw(i,j,2)
+                return True
+    #检查反对角线
+    return False
+
+def check_win(player):
+    '''
+
+    :param player:当前玩家(computer or player)
+    :return:是否胜利
+    '''
+    for i in range(8):
+        for j in range(5):
+            try:
+                stateList[i][j]
+                stateList[i][j+1]
+                stateList[i][j+2]
+                stateList[i][j+3]
+                stateList[i][j+4]
+            except:
+                break
+            if stateList[i][j] == player and stateList[i][j+1] == player and stateList[i][j+2] == player and stateList[i][j+3] == player and stateList[i][j+4] == player:
+                return True
+    #检查行
+
+    for i in range(5):
+        for j in range(8):
+            try:
+                stateList[i][j]
+                stateList[i+1][j]
+                stateList[i+2][j]
+                stateList[i+3][j]
+                stateList[i+4][j]
+            except:
+                break
+            if stateList[i][j] == player and stateList[i+1][j] == player and stateList[i+2][j] == player and stateList[i+3][j] == player and stateList[i+4][j] == player:
+                return True
+    #检查列
+
+    for i in range(5):
+        for j in range(5):
+            try:
+                stateList[i][j]
+                stateList[i+1][j+1]
+                stateList[i+2][j+2]
+                stateList[i+3][j+3]
+                stateList[i+4][j+4]
+            except:
+                break
+            if stateList[i][j] == player and stateList[i+1][j+1] == player and stateList[i+2][j+2] == player and stateList[i+3][j+3] == player and stateList[i+4][j+4] == player:
+                return True
+    #检查正对角线
+
+    for i in range(5):
+        for j in range(3, 8):
+            try:
+                stateList[i][j]
+                stateList[i+1][j-1]
+                stateList[i+2][j-2]
+                stateList[i+3][j-3]
+                stateList[i+4][j-4]
+            except:
+                break
+            if stateList[i][j] == player and stateList[i+1][j-1] == player and stateList[i+2][j-2] == player and stateList[i+3][j-3] == player and stateList[i+4][j-4] == player:
+                return True
+    #检查反对角线
+    cnt = 0
+    for i in stateList:
+        for j in i:
+            if j != 0:
+                cnt += 1
+    if cnt == 64:
+        stateLabel['text'] = '平局！'
+        canvas.unbind("<Button-1>")
+    #检查是否平局
+    return False
+
+def on_canvas_click(event):
+    '''
+    鼠标点击事件处理函数
+    :param event: 鼠标坐标
+    :return:无
+    '''
+    global stateList,x_index,y_index
+    x_index = int((event.x - 50) / 42.7)
+    y_index = int((event.y - 50) / 42.7)
+    if stateList[x_index][y_index]!= 0:
+        return
+    draw(x_index, y_index, 1)
+    stateLabel['text'] = '轮到电脑...'
+    canvas.update()
+    stateList[x_index][y_index] = 1
+    canvas.unbind("<Button-1>")
+    time.sleep(0.5)
+    computer_move()
+    if check_win(1):
+        stateLabel['text'] = '您赢了！'
+        canvas.unbind("<Button-1>")
+        tk.update()
+
+def computer_move():
+    '''
+    电脑下棋函数
+    :return: 无
+    '''
+    global stateList
+    while True:
+        if not soon_win(2):
+            #如果电脑不能拦截，随机选择方向，下在玩家的棋子旁边
+            angle = random.choice([[1, 0], [0, 1], [-1, 0], [0, -1]])
+            try:
+                if stateList[x_index + angle[0]][y_index + angle[1]] == 0:
+                    stateList[x_index + angle[0]][y_index + angle[1]] = 2
+                    draw(x_index + angle[0], y_index + angle[1], 2)
+                    break
+            except :
+                continue
+        else:
+            soon_win(2)
+            break
+
+canvas.bind("<Button-1>", on_canvas_click)
+tk.mainloop()
+#绑定鼠标点击事件，运行窗口
